@@ -199,7 +199,7 @@ const SYMBOLS = [
   { id:'aiBox',     label:'AI', title:'AI chip',       d:'M4 4h16v16H4zM9 17l2-7 2 7m-3.2-4h2.4' },
   { id:'check',     label:'✓',  title:'Check / done',  d:'M4 13l5 5L20 7' },
   { id:'target',    label:'◉',  title:'Target',        d:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-5a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0-2a2 2 0 1 0 0-4 2 2 0 0 0 0 4z' },
-  { id:'gear',      label:'⚙', title:'Settings',      d:'M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Zm0-11.5 1.6 2.8 3.2.4 1.2 3-1.6 2.8 1.6 2.8-1.2 3-3.2.4-1.6 2.8-1.6-2.8-3.2-.4-1.2-3L7.2 13l1.6-2.8-1.2-3 3.2-.4L10.4 4Z' },
+  { id:'gear',      label:'⚙', title:'Settings',      d:'M12.22 2h-.44a2 2 0 0 0-2 2v.18a7.03 7.03 0 0 0-3.94.65l-.13-.13a2 2 0 0 0-2.83 0l-.18.18a2 2 0 0 0 0 2.83l.13.13a7.03 7.03 0 0 0-.65 3.94H2a2 2 0 0 0-2 2v.44a2 2 0 0 0 2 2v.18a7.03 7.03 0 0 0 .65 3.94l.13.13a2 2 0 0 0 0 2.83l.18.18a2 2 0 0 0 2.83 0l.13-.13a7.03 7.03 0 0 0 3.94.65V22a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a7.03 7.03 0 0 0 3.94-.65l.13.13a2 2 0 0 0 2.83 0l.18-.18a2 2 0 0 0 0-2.83l-.13-.13a7.03 7.03 0 0 0 .65-3.94V12a2 2 0 0 0 2-2v-.44a2 2 0 0 0-2-2v-.18a7.03 7.03 0 0 0-.65-3.94l-.13-.13a2 2 0 0 0 0-2.83l-.18-.18a2 2 0 0 0-2.83 0l-.13.13a7.03 7.03 0 0 0-3.94-.65V4a2 2 0 0 0-2-2zM9 12a3 3 0 1 0 6 0 3 3 0 1 0-6 0' },
   { id:'shield',    label:'◆', title:'Shield',        d:'M12 3l8 3v5c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-3Zm-2 10 2 2 4-5' },
   { id:'star',      label:'★', title:'Star / rating', d:'m12 3 2.7 5.8 6.3.7-4.7 4.3 1.3 6.2L12 16.9 6.4 20l1.3-6.2L3 9.5l6.3-.7L12 3Z' },
   { id:'bubble',    label:'○', title:'Chat',          d:'M20 11a8 8 0 0 1-8 8H5l2-3a8 8 0 1 1 13-5Z' },
@@ -254,9 +254,14 @@ function currentPath(){
   return hit ? hit.d : SYMBOLS[0].d;
 }
 function strokeWidthFor(d){
+  // stroke is rendered in the 40-unit canvas coordinate space (vector-effect: non-scaling-stroke),
+  // so pick widths that read well across all four Chrome sizes (16/32/48/128).
   const s = SYMBOLS.find(x=>x.d===d);
-  if (s) return (s.label.length <= 2) ? 5.5 : 4.2;   // preserve tuned look of presets
-  return 4.8;                                        // sensible default for pasted paths
+  if (!s) return 3;                                    // pasted paths: medium weight
+  // hand-tuned per icon (complex / closed shapes need a thinner stroke to avoid filling their interior)
+  if (['star','bubble','image'].includes(s.id)) return 2.2;
+  if (['open','check','download','search','target','letterA','letterM'].includes(s.id)) return 4.5;
+  return 3;                                            // grid, bolt, aiBox, shield, gear, braces
 }
 
 /* ---------- SVG generation ---------- */
@@ -270,7 +275,7 @@ function svg(size){
   const fill = state.mode === 'gradient' ? 'url(#g)' : bg;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="${size}" height="${size}">${grad}`
     + `<rect width="40" height="40" rx="${r}" fill="${fill}"/>`
-    + `<g fill="none" stroke="${fg}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" transform="${symbolTransform(d)}"><path d="${d}"/></g></svg>`;
+    + `<g fill="none" stroke="${fg}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" transform="${symbolTransform(d)}"><path d="${d}"/></g></svg>`;
 }
 function dataUrl(size){ return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg(size)); }
 
