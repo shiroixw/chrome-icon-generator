@@ -1,0 +1,6 @@
+# macOS
+.DS_Store
+
+# local preview / IDE
+.vercel
+node_modules/
